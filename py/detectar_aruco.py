@@ -3,6 +3,41 @@ import cv2.aruco as aruco
 from banco_dados import obter_informacoes_local
 
 
+def processar_frame_aruco(frame, detector):
+    cinza = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    cantos, ids, _ = detector.detectMarkers(cinza)
+    if ids is None:
+        cv2.putText(
+            frame,
+            "Leitor ArUco ativo - nenhuma tag detectada",
+            (15, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            (0, 220, 255),
+            2,
+            cv2.LINE_AA,
+        )
+        return frame
+
+    cv2.aruco.drawDetectedMarkers(frame, cantos, ids)
+    for indice, id_array in enumerate(ids):
+        id_detectado = int(id_array.item())
+        informacao = obter_informacoes_local(id_detectado)
+        nome = informacao["nome"].title() if informacao else f"ID {id_detectado}"
+        ponto = tuple(cantos[indice][0][0].astype(int))
+        cv2.putText(
+            frame,
+            nome,
+            (ponto[0], max(24, ponto[1] - 10)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.65,
+            (0, 255, 0),
+            2,
+            cv2.LINE_AA,
+        )
+    return frame
+
+
 def iniciar_detector(fonte_video=0):
     dicionario = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
     parametros = aruco.DetectorParameters()

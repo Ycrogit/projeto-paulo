@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1768c4">
+  <title>Passos Contados — Demonstração</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
+
+  <header class="topbar">
+    <div class="brand" aria-label="Passos Contados">
+      <div class="brand-icon" aria-hidden="true">↗</div>
+      <span>Passos Contados</span>
+    </div>
+
+    <button class="profile-button" id="profileButton" type="button" aria-label="Abrir perfil de Maria">
+      <span class="greeting">Olá, Maria</span>
+      <span class="avatar" aria-hidden="true">M</span>
+    </button>
+  </header>
+
+
+
+
+  
+  <main id="main-content" tabindex="-1">
+    <!-- TELA: NAVEGAR -->
+    <section class="screen active" id="screen-navegar" data-screen="navegar" aria-labelledby="nav-title">
+      <div class="hero">
+        <h1 id="nav-title">Para onde você quer ir?</h1>
+        <p>Toque no microfone ou digite o local desejado.</p>
+
+        <button class="mic-button" id="micButton" type="button" aria-pressed="false"
+                aria-label="Ativar comando de voz">
+          <span class="mic-icon" aria-hidden="true">♩</span>
+        </button>
+
+        <button class="speak-button" id="speakButton" type="button">Toque para falar</button>
+
+        <div class="voice-status" id="voiceStatus" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="voiceStatusText">Sistema pronto e aguardando comando</span>
+        </div>
+
+        <div class="voice-caption" id="voiceCaption" aria-live="polite" hidden>
+          <strong>Comando reconhecido:</strong>
+          <span id="recognizedText">—</span>
+        </div>
+
+        <div class="command-test" aria-labelledby="command-test-title">
+          <strong id="command-test-title">Teste teórico de comando</strong>
+          <div class="input-row">
+            <input id="commandInput" type="text" autocomplete="off"
+                   placeholder="Ex.: abrir leitor aruco" aria-describedby="commandHelp">
+            <button id="runCommand" class="primary-small" type="button">Testar</button>
+          </div>
+          <small id="commandHelp">Comandos: abrir leitor aruco; abrir processamento de local; bom dia jarvis.</small>
+        </div>
+      </div>
+
+      <div class="destination-panel">
+        <label for="destinationInput">Ou digite seu destino</label>
+        <div class="input-row">
+          <input id="destinationInput" type="text" autocomplete="off"
+                 placeholder="Ex.: Biblioteca" aria-describedby="destinationHelp">
+          <button id="searchDestination" class="primary-small" type="button">Ir</button>
+        </div>
+        <small id="destinationHelp">Demonstração: o destino apenas muda a interface.</small>
+      </div>
+
+      <section class="places" aria-labelledby="places-title">
+        <div class="section-heading">
+          <h2 id="places-title">Locais disponíveis</h2>
+          <span class="counter" id="placeCounter">6 locais</span>
+        </div>
+
+        <div class="place-grid">
+          <button class="place-card" type="button" data-place="Secretaria" data-icon="▥">
+            <span class="place-icon" aria-hidden="true">▥</span>
+            <span>Secretaria</span>
+          </button>
+          <button class="place-card" type="button" data-place="Biblioteca" data-icon="▤">
+            <span class="place-icon" aria-hidden="true">▤</span>
+            <span>Biblioteca</span>
+          </button>
+          <button class="place-card" type="button" data-place="Refeitório" data-icon="♨">
+            <span class="place-icon" aria-hidden="true">♨</span>
+            <span>Refeitório</span>
+          </button>
+          <button class="place-card" type="button" data-place="Banheiro" data-icon="♿">
+            <span class="place-icon" aria-hidden="true">♿</span>
+            <span>Banheiro</span>
+          </button>
+          <button class="place-card" type="button" data-place="Quadra" data-icon="◉">
+            <span class="place-icon" aria-hidden="true">◉</span>
+            <span>Quadra</span>
+          </button>
+          <button class="place-card" type="button" data-place="Sala 101" data-icon="▯">
+            <span class="place-icon" aria-hidden="true">▯</span>
+            <span>Sala 101</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="accessibility-card" aria-labelledby="access-title">
+        <h2 id="access-title">Acessibilidade rápida</h2>
+
+        <div class="setting-row">
+          <div class="setting-icon" aria-hidden="true">T</div>
+          <div class="setting-text">
+            <strong>Aumentar texto</strong>
+            <span>Deixa as informações maiores</span>
+          </div>
+          <button class="toggle" type="button" data-setting="large-text" aria-pressed="false" aria-label="Aumentar texto">
+            <span></span>
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-icon" aria-hidden="true">◐</div>
+          <div class="setting-text">
+            <strong>Alto contraste</strong>
+            <span>Aumenta a diferença entre fundo e texto</span>
+          </div>
+          <button class="toggle" type="button" data-setting="high-contrast" aria-pressed="false" aria-label="Ativar alto contraste">
+            <span></span>
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-icon" aria-hidden="true">⌨</div>
+          <div class="setting-text">
+            <strong>Navegação por teclado</strong>
+            <span>Use Tab, Enter e Espaço</span>
+          </div>
+          <button class="toggle is-on" type="button" data-setting="keyboard" aria-pressed="true" aria-label="Navegação por teclado">
+            <span></span>
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-icon" aria-hidden="true">≋</div>
+          <div class="setting-text">
+            <strong>Feedback visual</strong>
+            <span>Mostra mensagens para comandos de voz</span>
+          </div>
+          <button class="toggle is-on" type="button" data-setting="visual-feedback" aria-pressed="true" aria-label="Ativar feedback visual">
+            <span></span>
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <!-- TELA: MAPA -->
+    <section class="screen" id="screen-mapa" data-screen="mapa" aria-labelledby="map-title" hidden>
+      <div class="screen-heading">
+        <span class="eyebrow">VISUALIZAÇÃO</span>
+        <h1 id="map-title">Mapa da escola</h1>
+        <p>Visor ilustrativo para representar imagens e posição GPS do local.</p>
+      </div>
+
+      <div class="map-viewer" role="img" aria-label="Câmera processada pelo backend no mini mapa">
+        <img class="camera-feed" id="cameraFeed" src="http://192.168.93.171:8000/api/camera.mjpg" alt="Transmissão da câmera processada pelo backend">
+        <div class="map-grid" aria-hidden="true"></div>
+        <div class="map-building building-a" aria-hidden="true">SECRETARIA</div>
+        <div class="map-building building-b" aria-hidden="true">BIBLIOTECA</div>
+        <div class="map-building building-c" aria-hidden="true">SALA 101</div>
+        <div class="map-building building-d" aria-hidden="true">QUADRA</div>
+        <div class="gps-marker" aria-hidden="true"><span></span></div>
+        <div class="map-label gps-label">Localização ilustrativa</div>
+        <div class="map-overlay">
+          <span id="cameraModeLabel">BACKEND / CAMERA</span>
+          <small>TRANSMISSÃO AO VIVO</small>
+        </div>
+      </div>
+
+      <div class="map-controls">
+        <button class="location-choice active" type="button" data-map-choice="onde-estou">
+          <span class="choice-icon" aria-hidden="true">⌖</span>
+          <span><strong>Onde estou</strong><small>Posição atual</small></span>
+        </button>
+        <button class="location-choice" type="button" data-map-choice="onde-quero-ir">
+          <span class="choice-icon" aria-hidden="true">◎</span>
+          <span><strong>Onde quero ir</strong><small>Escolher destino</small></span>
+        </button>
+      </div>
+
+      <div class="route-card" id="routeCard">
+        <div>
+          <span class="route-label">ROTA DE DEMONSTRAÇÃO</span>
+          <strong id="routeTitle">Você está na entrada</strong>
+          <p id="routeDescription">Escolha um destino na tela Navegar para visualizar uma rota ilustrativa.</p>
+        </div>
+        <span class="route-arrow" aria-hidden="true">→</span>
+      </div>
+
+      <section class="theory-panel" aria-labelledby="theory-title">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">TESTE TEÓRICO</span>
+            <h2 id="theory-title">Módulos no mini mapa</h2>
+          </div>
+          <span class="counter" id="theoryMode">Aguardando comando</span>
+        </div>
+        <div class="module-grid">
+          <article class="module-status" data-module="aruco">
+            <span class="module-dot" aria-hidden="true"></span>
+            <div><strong>Leitor ArUco</strong><small id="arucoStatus">Desativado</small></div>
+          </article>
+          <article class="module-status" data-module="local">
+            <span class="module-dot" aria-hidden="true"></span>
+            <div><strong>Processamento de local</strong><small id="localStatus">Desativado</small></div>
+          </article>
+          <article class="module-status" data-module="ia">
+            <span class="module-dot" aria-hidden="true"></span>
+            <div><strong>IA Jarvis</strong><small id="iaStatus">Em espera</small></div>
+          </article>
+        </div>
+      </section>
+
+      <div class="map-notice" role="note">
+        <strong>Status:</strong> a câmera e o processamento são fornecidos pelo backend local.
+      </div>
+    </section>
+
+    <!-- TELA: AJUDA -->
+    <section class="screen" id="screen-ajuda" data-screen="ajuda" aria-labelledby="help-title" hidden>
+      <div class="screen-heading">
+        <span class="eyebrow">DOCUMENTAÇÃO</span>
+        <h1 id="help-title">Como usar o Passos Contados</h1>
+        <p>Guia rápido para a demonstração da interface.</p>
+      </div>
+
+      <div class="help-list">
+        <article class="help-item">
+          <span class="help-number">01</span>
+          <div>
+            <h2>Navegar</h2>
+            <p>Escolha um dos locais disponíveis ou digite um destino. Na demonstração, o botão de voz reconhece comandos simulados e apresenta o resultado na tela.</p>
+          </div>
+        </article>
+
+        <article class="help-item">
+          <span class="help-number">02</span>
+          <div>
+            <h2>Mapa</h2>
+            <p>O mapa possui um visor ilustrativo. Use “Onde estou” para representar sua posição ou “Onde quero ir” para representar o destino.</p>
+          </div>
+        </article>
+
+        <article class="help-item">
+          <span class="help-number">03</span>
+          <div>
+            <h2>Acessibilidade</h2>
+            <p>Ative texto maior e alto contraste. Os controles possuem nomes acessíveis, foco visível e mensagens que podem ser lidas por leitores de tela.</p>
+          </div>
+        </article>
+
+        <article class="help-item">
+          <span class="help-number">04</span>
+          <div>
+            <h2>Para pessoas surdas</h2>
+            <p>Informações importantes não dependem apenas de áudio: o estado do sistema, os comandos reconhecidos e as orientações aparecem também por texto e indicadores visuais.</p>
+          </div>
+        </article>
+
+        <article class="help-item">
+          <span class="help-number">05</span>
+          <div>
+            <h2>Para pessoas cegas</h2>
+            <p>A interface usa estrutura semântica, rótulos para controles, regiões de status, navegação por teclado e foco direcionado ao trocar de tela.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="demo-note">
+        <strong>Esta versão é apenas uma demonstração visual.</strong>
+        <span>Não há login real, GPS real, banco de dados ou reconhecimento de voz conectado.</span>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegação principal">
+    <button class="nav-item active" type="button" data-target="navegar" aria-current="page">
+      <span class="nav-icon" aria-hidden="true">◈</span>
+      <span>Navegar</span>
+    </button>
+    <button class="nav-item" type="button" data-target="mapa">
+      <span class="nav-icon" aria-hidden="true">⌖</span>
+      <span>Mapa</span>
+    </button>
+    <button class="nav-item" type="button" data-target="ajuda">
+      <span class="nav-icon" aria-hidden="true">?</span>
+      <span>Ajuda</span>
+    </button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
