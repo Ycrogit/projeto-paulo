@@ -2,11 +2,41 @@ const screens = document.querySelectorAll(".screen");
 const navItems = document.querySelectorAll(".nav-item");
 const main = document.querySelector("#main-content");
 const toast = document.querySelector("#toast");
-const API_BASE = window.PASSOS_CONTADOS_API_URL || "http://192.168.93.171:8000/api";
+const API_BASE = window.PASSOS_CONTADOS_API_URL
+  || localStorage.getItem("passos_contados_api_url")
+  || (window.Capacitor ? "http://10.0.2.2:5000/api" : "/api");
 const cameraFeed = document.querySelector("#cameraFeed");
+const processedCameraFeed = document.querySelector("#processedCameraFeed");
+const cameraCanvas = document.createElement("canvas");
+let cameraStream;
+let frameTimer;
+let frameRequestAtivo = false;
+let ultimoLocalFalado = "";
+let modoProcessamento = "aruco";
+let carrinhoConectado = false;
 
 let currentScreen = "navegar";
 let toastTimer;
+
+async function verificarCarrinho() {
+  try {
+    const response = await fetch(`${API_BASE}/carrinho?atualizar=1`);
+    const status = await response.json();
+    carrinhoConectado = Boolean(status.conectado);
+    const aviso = document.querySelector("#cartStatus");
+    if (aviso) {
+      aviso.textContent = carrinhoConectado
+        ? `Carrinho conectado: ${status.carrinhos[0].nome}`
+        : "Carrinho não encontrado nesta rede";
+      aviso.classList.toggle("is-connected", carrinhoConectado);
+    }
+  } catch (error) {
+    console.warn("Descoberta do carrinho:", error.message);
+  }
+}
+
+verificarCarrinho();
+setInterval(verificarCarrinho, 15000);
 
 function announce(message) {
   const status = document.querySelector("#voiceStatusText");
@@ -108,6 +138,7 @@ const runCommand = document.querySelector("#runCommand");
 let listening = false;
 let aguardandoComando = false;
 let recognition;
+let vozesProntas;
 
 function normalizeCommand(command) {
   return command.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -120,13 +151,53 @@ function setModuleState(moduleName, status) {
   statusText.textContent = status;
 }
 
-function speakResponse(message) {
-  if (!message || !window.speechSynthesis) return Promise.resolve();
+async function prepararVozesWeb() {
+  if (vozesProntas) return vozesProntas;
+  vozesProntas = new Promise(resolve => {
+    const obterVozes = () => {
+      const vozes = window.speechSynthesis?.getVoices?.() || [];
+      if (vozes.length) resolve(vozes);
+    };
+    window.speechSynthesis?.addEventListener("voiceschanged", obterVozes, { once: true });
+    obterVozes();
+    setTimeout(() => resolve(window.speechSynthesis?.getVoices?.() || []), 800);
+  });
+  return vozesProntas;
+}
 
+async function speakResponse(message) {
+  if (!message) return Promise.resolve();
+
+  const nativeTextToSpeech = window.Capacitor?.Plugins?.TextToSpeech;
+  if (nativeTextToSpeech) {
+    try {
+      await nativeTextToSpeech.stop();
+      await nativeTextToSpeech.speak({
+        text: message,
+        lang: "pt-BR",
+        rate: 0.85,
+        pitch: 1.0,
+        volume: 1.0,
+      });
+      return;
+    } catch (error) {
+      console.warn("TTS nativo indisponível; usando voz web:", error);
+    }
+  }
+
+  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+    announce(`Jarvis: ${message}`);
+    return Promise.resolve();
+  }
+
+  const vozes = await prepararVozesWeb();
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(message);
   utterance.lang = "pt-BR";
-  utterance.rate = 0.95;
+  utterance.voice = vozes.find(voz => voz.lang?.toLowerCase().startsWith("pt-br"))
+    || vozes.find(voz => voz.lang?.toLowerCase().startsWith("pt"))
+    || null;
+  utterance.rate = 0.72;
   return new Promise(resolve => {
     utterance.onend = resolve;
     utterance.onerror = resolve;
@@ -135,8 +206,50 @@ function speakResponse(message) {
 }
 
 function refreshCameraFeed() {
-  if (cameraFeed && !cameraFeed.src.startsWith(`${API_BASE}/camera.mjpg`)) {
-    cameraFeed.src = `${API_BASE}/camera.mjpg`;
+  iniciarCameraCelular().catch(error => announce(`Câmera indisponível: ${error.message}`));
+}
+
+async function iniciarCameraCelular() {
+  if (!cameraFeed || !navigator.mediaDevices?.getUserMedia) {
+    throw new Error("Este aparelho não oferece câmera ao aplicativo.");
+  }
+  if (!cameraStream) {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    cameraFeed.srcObject = cameraStream;
+    await cameraFeed.play();
+  }
+  clearInterval(frameTimer);
+  frameTimer = setInterval(enviarFrameCelular, 650);
+}
+
+async function enviarFrameCelular() {
+  if (frameRequestAtivo || !cameraFeed?.videoWidth || !cameraFeed.videoHeight) return;
+  frameRequestAtivo = true;
+  cameraCanvas.width = cameraFeed.videoWidth;
+  cameraCanvas.height = cameraFeed.videoHeight;
+  cameraCanvas.getContext("2d").drawImage(cameraFeed, 0, 0);
+  const blob = await new Promise(resolve => cameraCanvas.toBlob(resolve, "image/jpeg", 0.72));
+  if (!blob) return;
+  const dados = new FormData();
+  dados.append("frame", blob, "camera.jpg");
+  dados.append("modo", modoProcessamento);
+  try {
+    const response = await fetch(`${API_BASE}/processar-frame`, { method: "POST", body: dados });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Falha ao processar câmera.");
+    const local = result.locais?.[0];
+    if (local && local.fala !== ultimoLocalFalado) {
+      ultimoLocalFalado = local.fala;
+      speakResponse(local.fala);
+    }
+    if (result.imagem && processedCameraFeed) processedCameraFeed.src = result.imagem;
+  } catch (error) {
+    console.warn("Processamento da câmera:", error.message);
+  } finally {
+    frameRequestAtivo = false;
   }
 }
 
@@ -151,6 +264,13 @@ function processCommandResult(result, veioDaVoz = false) {
   recognizedText.textContent = command;
   voiceCaption.hidden = false;
 
+  if (result.acao === "PARAR_FALA") {
+    stopSpeaking();
+    aguardandoComando = false;
+    announce(responseMessage || "Fala interrompida.");
+    return;
+  }
+
   if (result.acao === "ATIVAR_JARVIS" || normalized === "jarvis") {
     aguardandoComando = true;
     announce(responseMessage);
@@ -158,7 +278,8 @@ function processCommandResult(result, veioDaVoz = false) {
     return;
   }
 
-  if (result.acao === "ABRIR_LEITOR_ARUCO" || normalized === "abrir leitor aruco") {
+  if (result.acao === "ABRIR_LEITOR_ARUCO" || result.acao === "ATIVAR_LEITOR_COMPLETO" || normalized === "abrir leitor aruco") {
+    modoProcessamento = result.acao === "ATIVAR_LEITOR_COMPLETO" ? "completo" : "aruco";
     setModuleState("aruco", "Ativo no backend");
     document.querySelector("#theoryMode").textContent = "Leitor ArUco selecionado";
     refreshCameraFeed();
@@ -170,8 +291,21 @@ function processCommandResult(result, veioDaVoz = false) {
   }
 
   if (result.acao === "ABRIR_PROCESSAMENTO_LOCAL" || normalized === "averiguar local") {
+    modoProcessamento = "objetos";
     setModuleState("local", "Ativo no backend");
     document.querySelector("#theoryMode").textContent = "Processamento de local selecionado";
+    refreshCameraFeed();
+    showScreen("mapa");
+    announce(responseMessage);
+    speakResponse(responseMessage);
+    aguardandoComando = false;
+    return;
+  }
+
+  if (result.acao === "ATIVAR_DISTANCIA_OBJETOS" || normalized === "ativar distancia de objetos") {
+    modoProcessamento = "objetos";
+    setModuleState("local", "Distância de objetos ativa");
+    document.querySelector("#theoryMode").textContent = "Distância de objetos selecionada";
     refreshCameraFeed();
     showScreen("mapa");
     announce(responseMessage);
@@ -199,8 +333,28 @@ async function enviarComando(command) {
   }
 }
 
+function stopSpeaking() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  fetch(`${API_BASE}/parar-fala`, { method: "POST" }).catch(() => {});
+}
+
 async function captureVoiceCommand() {
-  const response = await fetch(`${API_BASE}/comando-voz`, { method: "POST" });
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    throw new Error("Este aparelho não oferece microfone ao aplicativo.");
+  }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  const gravador = new MediaRecorder(stream, { mimeType: "audio/webm" });
+  const partes = [];
+  gravador.ondataavailable = evento => { if (evento.data.size) partes.push(evento.data); };
+  const terminou = new Promise(resolve => { gravador.onstop = resolve; });
+  gravador.start();
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  if (gravador.state !== "inactive") gravador.stop();
+  await terminou;
+  stream.getTracks().forEach(track => track.stop());
+  const dadosAudio = new FormData();
+  dadosAudio.append("audio", new Blob(partes, { type: "audio/webm" }), "comando.webm");
+  const response = await fetch(`${API_BASE}/comando-voz`, { method: "POST", body: dadosAudio });
   const result = await response.json();
   if (!response.ok) throw new Error(result.erro || "Falha no reconhecimento.");
   processCommandResult(result, true);
@@ -241,7 +395,7 @@ function stopListening(showMessage = true) {
   voiceStatus.classList.remove("listening");
   speakButton.textContent = "Toque para falar";
   voiceStatusText.textContent = "Sistema pronto e aguardando comando";
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  stopSpeaking();
 
   if (showMessage) announce("Comando de voz desativado.");
 }

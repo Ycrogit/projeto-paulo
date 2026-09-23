@@ -6,6 +6,9 @@
   <meta name="theme-color" content="#1768c4">
   <title>Passos Contados — Demonstração</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    window.PASSOS_CONTADOS_API_URL = "http://127.0.0.1:5000/api";
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
@@ -159,7 +162,8 @@
       </div>
 
       <div class="map-viewer" role="img" aria-label="Câmera processada pelo backend no mini mapa">
-        <img class="camera-feed" id="cameraFeed" src="http://192.168.93.171:8000/api/camera.mjpg" alt="Transmissão da câmera processada pelo backend">
+        <video class="camera-feed" id="cameraFeed" autoplay muted playsinline aria-label="Câmera do celular processada pelo backend"></video>
+        <img class="processed-camera-feed" id="processedCameraFeed" alt="Imagem processada pelo backend">
         <div class="map-grid" aria-hidden="true"></div>
         <div class="map-building building-a" aria-hidden="true">SECRETARIA</div>
         <div class="map-building building-b" aria-hidden="true">BIBLIOTECA</div>
@@ -220,6 +224,9 @@
       <div class="map-notice" role="note">
         <strong>Status:</strong> a câmera e o processamento são fornecidos pelo backend local.
       </div>
+          <div class="map-notice" id="cartStatus" role="status" aria-live="polite">
+            Carrinho não encontrado nesta rede
+          </div>
     </section>
 
     <!-- TELA: AJUDA -->

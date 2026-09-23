@@ -1,6 +1,8 @@
+import os
 import sqlite3
 
-BANCO_PATH = "passos_contados.db"
+RAIZ_PROJETO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+BANCO_PATH = os.path.join(RAIZ_PROJETO, "passos_contados.db")
 
 
 def conectar():
@@ -203,21 +205,22 @@ def obter_informacoes_local(id_aruco):
 if __name__ == "__main__":
     inicializar_banco()
 
-    # Exemplo de povoamento inicial
+    # Povoamento dos nós
     adicionar_local(0, "Entrada Principal", "Portão de acesso")
     adicionar_local(1, "Biblioteca", "Setor de livros")
-    adicionar_local(2, "Laboratorio", "Informatica")
+    adicionar_local(10, "Laboratorio de Informatica", "Espaço com computadores e bancadas")
 
+    # Mapeamento dos caminhos
     adicionar_conexao(
         origem_id=0,
         destino_id=1,
         distancia_passos=15,
-        orientacao="Siga em frente",
+        orientacao="Siga em frente pelo corredor principal",
         bidirecional=True,
     )
     adicionar_conexao(
         origem_id=1,
-        destino_id=2,
+        destino_id=10,
         distancia_passos=10,
         orientacao="Vire à esquerda",
         bidirecional=True,
@@ -230,3 +233,4 @@ if __name__ == "__main__":
     print("\n--- CORREDORES MAPEADOS ---")
     for con in listar_conexoes():
         print(con)
+        

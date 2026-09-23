@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@capacitor-community/text-to-speech": "^8.0.2"
+  }
+}
